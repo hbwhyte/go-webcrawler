@@ -21,6 +21,20 @@ func main() {
 		os.Exit(1)
 	}
 
+	queue := make(chan string) // New channel that retrieves and delivers strings
+
+	go func() { // run this asyncronously
+		queue <- args[0] // put args into the channel
+	}()
+
+	for uri := range queue {
+		enqueue(uri, queue)
+	}
+}
+
+func enqueue(uri string, queue chan string) {
+	fmt.Println("Fetching", uri)
+
 	// This section allows it to search https-secured site by disabling SSL verification
 	tlsConfig := &tls.Config{
 		InsecureSkipVerify: true,
@@ -32,7 +46,7 @@ func main() {
 
 	client := http.Client{Transport: transport}
 
-	resp, err := client.Get(args[0]) // declaring 2 variables at once
+	resp, err := client.Get(uri) // declaring 2 variables at once
 	/* The way you handle errors in Go is to expect that functions you
 	call will return two things and the second one will be an error. If the
 	error is nil then you can continue but if it's not you need to handle it. */

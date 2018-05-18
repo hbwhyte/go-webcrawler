@@ -7,10 +7,13 @@ import (
 	"flag"       // helps parse command line args
 	"fmt"        // package for printing to the screen
 	"net/http"   // package to retrieve the webpage
+	"net/url"    // standard library to fix urls
 	"os"         // gives you access to system calls
 
 	"github.com/jackdanger/collectlinks" // library for parsing links
 )
+
+var visited = make(map[string]bool)
 
 func main() {
 	flag.Parse()
@@ -34,6 +37,7 @@ func main() {
 
 func enqueue(uri string, queue chan string) {
 	fmt.Println("Fetching", uri)
+	visited[uri] = true // record that the page was visited
 
 	// This section allows it to search https-secured site by disabling SSL verification
 	tlsConfig := &tls.Config{
@@ -58,8 +62,28 @@ func enqueue(uri string, queue chan string) {
 	links := collectlinks.All(resp.Body)
 
 	for _, link := range links { // 'for' + 'range' in Go is like an enhanced for loop
-		fmt.Println(link)
-	}
-	// _ is a placeholder for where index would be, but since we don't use index we use _
+		absolute := fixUrl(link, uri) // fix link before enqueing
 
+		// We'll set invalid URLs to blank strings so let's never send those to the channel.
+		if uri != "" {
+			if !visited[absolute] {
+				go func() {
+					queue <- absolute
+				}()
+			}
+		}
+	}
+}
+
+func fixUrl(href, base string) string {
+	uri, err := url.Parse(href)
+	if err != nil {
+		return ""
+	}
+	baseUrl, err := url.Parse(base)
+	if err != nil {
+		return ""
+	}
+	uri = baseUrl.ResolveReference(uri)
+	return uri.String()
 }

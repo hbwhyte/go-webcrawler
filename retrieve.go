@@ -1,6 +1,6 @@
 package main
 
-import (
+/* import (
 	"fmt"
 	"io/ioutil" // helps read/print the webpage
 	"net/http"  // package to retrieve the webpage
@@ -12,7 +12,7 @@ func main() {
 	call will return two things and the second one will be an error. If the
 	error is nil then you can continue but if it's not you need to handle it. */
 
-	fmt.Println("http transport error is: ", err)
+/*fmt.Println("http transport error is: ", err)
 
 	body, err := ioutil.ReadAll(resp.Body) // resp.Body is a ref to a stream of data
 
@@ -21,3 +21,4 @@ func main() {
 	fmt.Println(string(body)) // cast from byte array to String
 
 }
+*/

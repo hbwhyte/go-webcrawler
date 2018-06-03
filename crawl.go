@@ -4,20 +4,35 @@ package main
 
 import (
 	"crypto/tls" // for low level transport customizations
-	"flag"       // helps parse command line args
-	"fmt"        // package for printing to the screen
-	"net/http"   // package to retrieve the webpage
-	"net/url"    // standard library to fix urls
-	"os"         // gives you access to system calls
+	"database/sql"
+	"flag"     // helps parse command line args
+	"fmt"      // package for printing to the screen
+	"net/http" // package to retrieve the webpage
+	"net/url"  // standard library to fix urls
+	"os"       // gives you access to system calls
 
+	_ "github.com/go-sql-driver/mysql"
 	"github.com/jackdanger/collectlinks" // library for parsing links
 )
+
+func dbConn() (db *sql.DB) {
+	dbDriver := "mysql"
+	dbUser := "root"
+	dbPass := ""
+	dbName := "goblog"
+	db, err := sql.Open(dbDriver, dbUser+":"+dbPass+"@/"+dbName)
+	if err != nil {
+		panic(err.Error())
+	}
+	return db
+}
 
 var visited = make(map[string]bool)
 
 func main() {
 	flag.Parse()
 	args := flag.Args()
+	var depth = 0
 
 	if len(args) < 1 {
 		fmt.Println("Please specify a start page")
@@ -28,15 +43,17 @@ func main() {
 
 	go func() { // run this asyncronously
 		queue <- args[0] // put args into the channel
+		fmt.Println("async go func")
 	}()
 
 	for uri := range queue {
-		enqueue(uri, queue)
+		enqueue(uri, queue, depth)
+		fmt.Println("for uri enqueue")
 	}
 }
 
-func enqueue(uri string, queue chan string) {
-	fmt.Println("Fetching", uri)
+func enqueue(uri string, queue chan string, depth int) {
+	fmt.Println("Fetching", uri, "Level:", depth)
 	visited[uri] = true // record that the page was visited
 
 	// This section allows it to search https-secured site by disabling SSL verification
@@ -63,7 +80,7 @@ func enqueue(uri string, queue chan string) {
 
 	for _, link := range links { // 'for' + 'range' in Go is like an enhanced for loop
 		absolute := fixUrl(link, uri) // fix link before enqueing
-
+		fmt.Println("for links loop")
 		// We'll set invalid URLs to blank strings so let's never send those to the channel.
 		if uri != "" {
 			if !visited[absolute] {

@@ -80,7 +80,7 @@ func enqueue(uri string, queue chan string, depth int) {
 
 	for _, link := range links { // 'for' + 'range' in Go is like an enhanced for loop
 		absolute := fixUrl(link, uri) // fix link before enqueing
-		fmt.Println("for links loop")
+		// fmt.Println("for links loop")
 		// We'll set invalid URLs to blank strings so let's never send those to the channel.
 		if uri != "" {
 			if !visited[absolute] {

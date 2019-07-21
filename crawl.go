@@ -40,12 +40,10 @@ func enqueue(uri string, queue chan string) {
 	visited[uri] = true // record that the page was visited
 
 	// This section allows it to search https-secured site by disabling SSL verification
-	tlsConfig := &tls.Config{
-		InsecureSkipVerify: true,
-	}
-
 	transport := &http.Transport{
-		TLSClientConfig: tlsConfig,
+		TLSClientConfig: &tls.Config{
+			InsecureSkipVerify: true,
+		},
 	}
 
 	client := http.Client{Transport: transport}
